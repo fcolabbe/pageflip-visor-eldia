@@ -70,15 +70,27 @@ const Flipbook = ({ pdfUrl }) => {
                 const maxPageWidth = 1000;
                 potentialPageWidth = Math.min(potentialPageWidth, maxPageWidth);
 
-                setContainerWidth(Math.floor(potentialPageWidth));
+                setContainerWidth(window.innerWidth > 1000 ? 1000 : window.innerWidth); // Sin margen
             }
         };
 
         window.addEventListener('resize', handleResize);
-        setTimeout(handleResize, 100);
+        handleResize();
 
         return () => window.removeEventListener('resize', handleResize);
     }, []);
+
+    // Force top alignment on mobile whenever pages load or resize
+    useEffect(() => {
+        if (isMobile && transformRef.current) {
+            // Small timeout to ensure library has finished its own layout
+            setTimeout(() => {
+                if (transformRef.current) {
+                    transformRef.current.setTransform(0, 0, 1);
+                }
+            }, 100);
+        }
+    }, [isMobile, numPages]);
 
     const toggleFullScreen = () => {
         const elem = document.getElementById('flipbook-container'); // Fullscreen solo el contenedor
@@ -144,16 +156,8 @@ const Flipbook = ({ pdfUrl }) => {
                 maxScale={5}
                 centerOnInit={!isMobile}
                 initialPositionX={0}
-                initialPositionY={0}
-                centerZoomedOut={!isMobile}
-                disablePadding={true}
                 wheel={{ step: 0.1 }}
-                onInit={(ref) => {
-                    if (isMobile) {
-                        // Force top alignment (0,0) explicitly on mount
-                        ref.setTransform(0, 0, 1);
-                    }
-                }}
+                alignmentAnimation={{ disabled: true }}
                 onTransformed={(ref, state) => {
                     // Update zoom text
                     const zoomText = document.getElementById('zoom-level-text');
