@@ -190,11 +190,13 @@ button {
         height: calc(100vh - 60px);
         justify-content: flex-start;
         /* Align wrapper content to top */
+        padding-top: 0 !important;
     }
 
     .zoom-wrapper {
-        padding-top: 20px;
-        /* Space from header */
+        padding-top: 0 !important;
+        /* Zero space */
+        margin-top: 0 !important;
         align-items: flex-start !important;
     }
 
