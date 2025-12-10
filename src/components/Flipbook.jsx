@@ -105,14 +105,15 @@ const Flipbook = ({ pdfUrl }) => {
     // Force top alignment on mobile whenever pages load or resize
     useEffect(() => {
         if (isMobile && transformRef.current) {
-            // Small timeout to ensure library has finished its own layout
+            // Wait for library to settle layout
             setTimeout(() => {
                 if (transformRef.current) {
+                    // Force 20px top margin to override default vertical centering
                     transformRef.current.setTransform(0, 20, 1);
                 }
-            }, 100);
+            }, 200);
         }
-    }, [isMobile, numPages]);
+    }, [isMobile, numPages, containerWidth]); // Re-run if container size changes
 
     const toggleFullScreen = () => {
         const elem = document.getElementById('flipbook-container'); // Fullscreen solo el contenedor
