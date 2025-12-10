@@ -86,7 +86,7 @@ const Flipbook = ({ pdfUrl }) => {
             // Small timeout to ensure library has finished its own layout
             setTimeout(() => {
                 if (transformRef.current) {
-                    transformRef.current.setTransform(0, 0, 1);
+                    transformRef.current.setTransform(0, 10, 1);
                 }
             }, 100);
         }
