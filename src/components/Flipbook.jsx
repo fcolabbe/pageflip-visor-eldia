@@ -7,7 +7,8 @@ import 'react-pdf/dist/Page/TextLayer.css';
 import './Flipbook.css';
 
 // Configurar worker de PDF.js
-pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
+// Configurar worker de PDF.js
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 const PdfPage = React.forwardRef(({ pageNumber, width }, ref) => {
     return (
