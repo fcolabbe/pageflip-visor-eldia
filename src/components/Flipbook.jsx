@@ -147,10 +147,15 @@ const Flipbook = ({ pdfUrl }) => {
                 initialPositionY={0}
                 centerZoomedOut={!isMobile}
                 disablePadding={true}
-                wheel={{ step: 0.1 }} // Zoom más suave
+                wheel={{ step: 0.1 }}
+                onInit={(ref) => {
+                    if (isMobile) {
+                        // Force top alignment (0,0) explicitly on mount
+                        ref.setTransform(0, 0, 1);
+                    }
+                }}
                 onTransformed={(ref, state) => {
-                    // Force update if needed, but render prop is better
-                    // We can use a ref to update text to avoid re-renders or state
+                    // Update zoom text
                     const zoomText = document.getElementById('zoom-level-text');
                     if (zoomText) {
                         zoomText.textContent = `${Math.round(state.scale * 100)}%`;

@@ -203,13 +203,6 @@ button {
     .zoom-content {
         align-items: flex-start !important;
     }
-
-    /* Hack: Force library wrapper up to remove persistent gap */
-    .stf__wrapper {
-        margin-top: -30px !important;
-        display: block !important;
-        /* Ensure it respects margin */
-    }
 }
 
 button:hover {
