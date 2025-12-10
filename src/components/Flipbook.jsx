@@ -140,17 +140,24 @@ const Flipbook = ({ pdfUrl }) => {
     const handleDownloadPage = () => {
         // Simple hack: Encontrar el canvas visible en el viewport
         // Nota: react-pdf renderiza en canvas. react-pageflip mueve estos canvas.
-        const canvases = document.querySelectorAll('.react-pdf__Page__canvas');
-        if (canvases.length > 0) {
-            // En modo spread puede haber 2. Descargamos el primero que encontramos visible o activo
-            // Para simplificar, descargamos la vista actual si es posible, o una alerta.
-            // Mejor enfoque simple: Dar link a la imagen generada por el canvas.
+        const currentCanvas = document.querySelector(`.react-pdf__Page[data-page-number="${currentPage}"] canvas`);
+
+        if (currentCanvas) {
             const link = document.createElement('a');
             link.download = `diario-eldia-pag-${currentPage}.png`;
-            link.href = canvases[0].toDataURL(); // Toma el primer canvas renderizado (página izq o única)
+            link.href = currentCanvas.toDataURL();
             link.click();
         } else {
-            alert("Espera a que la página cargue completamente para descargarla.");
+            // Fallback: Try to find ANY visible canvas if the specific one fails (rare)
+            const visibleCanvas = document.querySelector('.react-pdf__Page__canvas');
+            if (visibleCanvas) {
+                const link = document.createElement('a');
+                link.download = `diario-eldia-pag-${currentPage}.png`;
+                link.href = visibleCanvas.toDataURL();
+                link.click();
+            } else {
+                alert("Espera a que la página cargue completamente para descargarla.");
+            }
         }
     };
 
