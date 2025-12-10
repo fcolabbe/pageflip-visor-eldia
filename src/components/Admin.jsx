@@ -9,7 +9,7 @@ const Admin = () => {
     const [uploadMode, setUploadMode] = useState('file'); // 'file' or 'url'
     const [formData, setFormData] = useState({
         edition_date: '',
-        type: 'diario',
+        type: 'Diario el Día',
         pdf: null,
         pdf_url_source: ''
     });
@@ -251,8 +251,12 @@ const Admin = () => {
                                             onChange={handleInputChange}
                                             style={styles.select}
                                         >
-                                            <option value="diario">Diario</option>
-                                            <option value="revista">Revista</option>
+                                            <option value="Diario el Día">Diario el Día</option>
+                                            <option value="Revista Vida Hogar">Revista Vida Hogar</option>
+                                            <option value="Revista Vida Salud">Revista Vida Salud</option>
+                                            <option value="Boletin Comunidades">Boletín Comunidades</option>
+                                            <option value="Revista Peludos">Revista Peludos</option>
+                                            <option value="Edicion Especial">Edición Especial</option>
                                         </select>
                                     </div>
 
