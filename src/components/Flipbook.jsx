@@ -177,7 +177,10 @@ const Flipbook = ({ pdfUrl }) => {
             >
                 {({ zoomIn, zoomOut, resetTransform, instance }) => (
                     <>
-                        <TransformComponent wrapperClass="zoom-wrapper" contentClass="zoom-content">
+                        <TransformComponent
+                            wrapperClass="zoom-wrapper"
+                            contentClass={`zoom-content ${isZoomed ? 'is-zoomed' : ''}`}
+                        >
                             <Document
                                 file={pdfUrl}
                                 onLoadSuccess={onDocumentLoadSuccess}

@@ -102,6 +102,13 @@
 }
 
 /* Floating Controls with Glassmorphism */
+/* Disable interactions when zoomed to prevent accidental flips */
+.zoom-content.is-zoomed .stf__parent,
+.zoom-content.is-zoomed .react-pdf__Page,
+.zoom-content.is-zoomed canvas {
+    pointer-events: none !important;
+}
+
 .controls {
     position: fixed;
     bottom: 30px;
