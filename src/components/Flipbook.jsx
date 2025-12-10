@@ -33,12 +33,19 @@ const Flipbook = ({ pdfUrl }) => {
     const [containerWidth, setContainerWidth] = useState(800);
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
+    const [isZoomed, setIsZoomed] = useState(false);
+
     const bookRef = useRef();
     const transformRef = useRef();
+
+    // ... existing refs ...
 
     const onDocumentLoadSuccess = ({ numPages }) => {
         setNumPages(numPages);
     };
+
+    // ... existing useEffects ... 
+
 
     const onFlip = useCallback((e) => {
         // e.data is the new page index (0-based)
@@ -164,6 +171,8 @@ const Flipbook = ({ pdfUrl }) => {
                     if (zoomText) {
                         zoomText.textContent = `${Math.round(state.scale * 100)}%`;
                     }
+                    // Disable flip on zoom
+                    setIsZoomed(state.scale > 1.1);
                 }}
             >
                 {({ zoomIn, zoomOut, resetTransform, instance }) => (
@@ -186,8 +195,13 @@ const Flipbook = ({ pdfUrl }) => {
                                     maxHeight={1633}
                                     maxShadowOpacity={0.5}
                                     showCover={true}
-                                    mobileScrollSupport={true} // Allow touch flip
+                                    mobileScrollSupport={true}
                                     usePortrait={isMobile}
+                                    // Disable interactions when zoomed
+                                    useMouseEvents={!isZoomed}
+                                    clickEventForward={!isZoomed}
+                                    showPageCorners={!isZoomed}
+                                    disableFlipByClick={isZoomed}
                                     onFlip={onFlip}
                                     ref={bookRef}
                                     className="flipbook-instance"
