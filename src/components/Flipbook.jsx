@@ -58,13 +58,14 @@ const Flipbook = ({ pdfUrl }) => {
             const container = document.getElementById('flipbook-container');
             if (container) {
                 const availableWidth = container.clientWidth;
-                // Aumentamos margen drásticamente para asegurar que NO tape herramientas (Header + Controls + Safety)
-                const availableHeight = window.innerHeight - 190;
+                // Aumentamos margen para asegurar que NO tape herramientas (Header + Controls).
+                // Header es 70px. Controles abajo flotantes. Dejamos 100px.
+                const availableHeight = window.innerHeight - 100;
 
                 const mobile = availableWidth < 768;
                 setIsMobile(mobile);
 
-                const aspectRatio = 1.42;
+                const aspectRatio = 1.41; // Matched with HTMLFlipBook height prop
 
                 // 1. Calcular ancho basado en el espacio horizontal
                 let potentialPageWidth = mobile ? (availableWidth - 10) : ((availableWidth / 2) - 30);
@@ -80,9 +81,18 @@ const Flipbook = ({ pdfUrl }) => {
                 // 3. Final Width Calculation
                 // If it's desktop, the container needs to hold TWO pages side-by-side.
                 // If mobile, just one page.
-                const finalContainerWidth = mobile ? potentialPageWidth : (potentialPageWidth * 2);
+                const finalContainerWidth = mobile ? potentialPageWidth : (potentialPageWidth * 2); // Wait, width prop in FlipBook is Single Page Width?
+                // CHECKUP: 'width' prop in react-pageflip is usually dimensions of ONE PAGE.
+                // Let's verify line 204: width={containerWidth}
+                // If containerWidth is `potentialPageWidth * 2`, then each page is double width. That's wrong.
+                // The library expects "width of a page".
+                // My previous fix line 83 set it to `potentialPageWidth * 2` for desktop.
+                // IF `width` prop is per-page, I broke it.
+                // The docs say: width = width of the book page.
+                // So I should pass `potentialPageWidth` as `width`.
 
-                setContainerWidth(finalContainerWidth);
+                // Let's correct this variable name and state usage.
+                setContainerWidth(potentialPageWidth);
             }
         };
 
@@ -202,12 +212,12 @@ const Flipbook = ({ pdfUrl }) => {
                                 <HTMLFlipBook
                                     key={isMobile ? 'mobile' : 'desktop'}
                                     width={containerWidth}
-                                    height={containerWidth * 1.4}
+                                    height={containerWidth * 1.41}
                                     size="fixed"
                                     minWidth={200}
                                     maxWidth={1000}
                                     minHeight={300}
-                                    maxHeight={1633}
+                                    maxHeight={1800}
                                     maxShadowOpacity={0.5}
                                     showCover={true}
                                     mobileScrollSupport={true}
