@@ -36,7 +36,7 @@ const ViewerPage = () => {
     if (error) return <div className="error-screen">{error}</div>;
 
     return (
-        <div style={{ height: '100vh', width: '100vw', overflow: 'hidden' }}>
+        <div style={{ height: 'calc(100vh - 70px)', width: '100vw', overflow: 'hidden', marginTop: '70px' }}>
             {pdfUrl && <Flipbook pdfUrl={pdfUrl} />}
         </div>
     );
