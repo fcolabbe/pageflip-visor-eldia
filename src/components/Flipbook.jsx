@@ -102,13 +102,14 @@ const Flipbook = ({ pdfUrl }) => {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    // Force top alignment on mobile whenever pages load or resize
+    // Force top alignment on ALL devices to avoid vertical centering (e.g. 228px offset)
     useEffect(() => {
-        if (isMobile && transformRef.current) {
+        if (transformRef.current) {
             // Wait for library to settle layout
             setTimeout(() => {
                 if (transformRef.current) {
-                    // Force 20px top margin to override default vertical centering
+                    // Force 20px top margin to override default vertical centering globally
+                    // User requested to remove "transform: translate(0px, 228px)" on desktop
                     transformRef.current.setTransform(0, 20, 1);
                 }
             }, 200);
