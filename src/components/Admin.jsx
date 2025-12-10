@@ -5,12 +5,11 @@ import { useNavigate } from 'react-router-dom';
 const Admin = () => {
     const [editions, setEditions] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [uploading, setUploading] = useState(false);
     const [formData, setFormData] = useState({
-        title: '',
         edition_date: '',
         type: 'diario',
-        pdf_url: '',
-        cover_url: ''
+        pdf: null
     });
     const navigate = useNavigate();
 
@@ -45,22 +44,37 @@ const Admin = () => {
     };
 
     const handleInputChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        if (e.target.name === 'pdf') {
+            setFormData({ ...formData, pdf: e.target.files[0] });
+        } else {
+            setFormData({ ...formData, [e.target.name]: e.target.value });
+        }
     };
 
     const handleCreate = async (e) => {
         e.preventDefault();
+        setUploading(true);
+
         try {
+            const data = new FormData();
+            data.append('edition_date', formData.edition_date);
+            data.append('type', formData.type);
+            data.append('pdf', formData.pdf);
+
             const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
-            await axios.post(`${apiUrl}/editions`, formData);
+            await axios.post(`${apiUrl}/editions`, data, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
 
             // Reset and Refresh
             setIsModalOpen(false);
-            setFormData({ title: '', edition_date: '', type: 'diario', pdf_url: '', cover_url: '' });
+            setUploading(false);
+            setFormData({ edition_date: '', type: 'diario', pdf: null });
             fetchEditions();
             alert("Edición creada exitosamente");
         } catch (err) {
             console.error("Error creating edition", err);
+            setUploading(false);
             alert("Error al crear la edición");
         }
     };
@@ -88,7 +102,7 @@ const Admin = () => {
                 <div style={styles.toolbar}>
                     <h2 style={styles.subtitle}>Listado de Ediciones</h2>
                     <button onClick={() => setIsModalOpen(true)} style={styles.createBtn}>
-                        + Nueva Edición
+                        <span style={{ fontSize: '1.2rem', marginRight: '5px' }}>+</span> Nueva Edición
                     </button>
                 </div>
 
@@ -97,6 +111,7 @@ const Admin = () => {
                         <thead>
                             <tr>
                                 <th style={styles.th}>ID</th>
+                                <th style={styles.th}>Portada</th>
                                 <th style={styles.th}>Título</th>
                                 <th style={styles.th}>Fecha</th>
                                 <th style={styles.th}>Tipo</th>
@@ -107,6 +122,17 @@ const Admin = () => {
                             {editions.map(edition => (
                                 <tr key={edition.id} style={styles.tr}>
                                     <td style={styles.td}>#{edition.id}</td>
+                                    <td style={styles.td}>
+                                        <div style={styles.thumbWrapper}>
+                                            <img
+                                                src={edition.cover_url && edition.cover_url.startsWith('/')
+                                                    ? `${import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:5001'}${edition.cover_url}`
+                                                    : edition.cover_url || "https://via.placeholder.com/50"}
+                                                alt="cover"
+                                                style={styles.thumb}
+                                            />
+                                        </div>
+                                    </td>
                                     <td style={styles.td}>
                                         <span style={styles.cellTitle}>{edition.title}</span>
                                     </td>
@@ -123,7 +149,7 @@ const Admin = () => {
                             ))}
                             {editions.length === 0 && (
                                 <tr>
-                                    <td colSpan="5" style={{ padding: '20px', textAlign: 'center', color: '#888' }}>
+                                    <td colSpan="6" style={{ padding: '40px', textAlign: 'center', color: '#888' }}>
                                         No hay ediciones registradas.
                                     </td>
                                 </tr>
@@ -139,68 +165,58 @@ const Admin = () => {
                     <div style={styles.modalContent}>
                         <div style={styles.modalHeader}>
                             <h3>Nueva Edición</h3>
-                            <button onClick={() => setIsModalOpen(false)} style={styles.closeBtn}>×</button>
+                            {!uploading && <button onClick={() => setIsModalOpen(false)} style={styles.closeBtn}>×</button>}
                         </div>
                         <form onSubmit={handleCreate} style={styles.form}>
-                            <div style={styles.formGroup}>
-                                <label style={styles.label}>Título</label>
-                                <input
-                                    name="title"
-                                    value={formData.title}
-                                    onChange={handleInputChange}
-                                    style={styles.input}
-                                    placeholder="Ej: Diario El Día - 10 Dic"
-                                    required
-                                />
-                            </div>
-                            <div style={styles.formGroup}>
-                                <label style={styles.label}>Fecha</label>
-                                <input
-                                    type="date"
-                                    name="edition_date"
-                                    value={formData.edition_date}
-                                    onChange={handleInputChange}
-                                    style={styles.input}
-                                    required
-                                />
-                            </div>
-                            <div style={styles.formGroup}>
-                                <label style={styles.label}>Tipo</label>
-                                <select
-                                    name="type"
-                                    value={formData.type}
-                                    onChange={handleInputChange}
-                                    style={styles.select}
-                                >
-                                    <option value="diario">Diario</option>
-                                    <option value="revista">Revista</option>
-                                </select>
-                            </div>
-                            <div style={styles.formGroup}>
-                                <label style={styles.label}>URL PDF</label>
-                                <input
-                                    name="pdf_url"
-                                    value={formData.pdf_url}
-                                    onChange={handleInputChange}
-                                    style={styles.input}
-                                    placeholder="https://.../archivo.pdf"
-                                    required
-                                />
-                            </div>
-                            <div style={styles.formGroup}>
-                                <label style={styles.label}>URL Portada (Imagen)</label>
-                                <input
-                                    name="cover_url"
-                                    value={formData.cover_url}
-                                    onChange={handleInputChange}
-                                    style={styles.input}
-                                    placeholder="https://.../portada.jpg"
-                                />
-                            </div>
-                            <div style={styles.modalActions}>
-                                <button type="button" onClick={() => setIsModalOpen(false)} style={styles.cancelBtn}>Cancelar</button>
-                                <button type="submit" style={styles.saveBtn}>Guardar Edición</button>
-                            </div>
+                            {uploading ? (
+                                <div style={{ textAlign: 'center', padding: '20px' }}>
+                                    <p>Subiendo y procesando archivo...</p>
+                                    <p style={{ fontSize: '0.8rem', color: '#666' }}>Esto puede tomar unos segundos.</p>
+                                </div>
+                            ) : (
+                                <>
+                                    <div style={styles.formGroup}>
+                                        <label style={styles.label}>Archivo PDF</label>
+                                        <input
+                                            type="file"
+                                            name="pdf"
+                                            accept="application/pdf"
+                                            onChange={handleInputChange}
+                                            style={styles.fileInput}
+                                            required
+                                        />
+                                        <small style={{ color: '#666', fontSize: '0.8rem' }}>La portada se extraerá automáticamente de la primera página.</small>
+                                    </div>
+                                    <div style={styles.formGroup}>
+                                        <label style={styles.label}>Fecha de Edición</label>
+                                        <input
+                                            type="date"
+                                            name="edition_date"
+                                            value={formData.edition_date}
+                                            onChange={handleInputChange}
+                                            style={styles.input}
+                                            required
+                                        />
+                                    </div>
+                                    <div style={styles.formGroup}>
+                                        <label style={styles.label}>Tipo de Publicación</label>
+                                        <select
+                                            name="type"
+                                            value={formData.type}
+                                            onChange={handleInputChange}
+                                            style={styles.select}
+                                        >
+                                            <option value="diario">Diario</option>
+                                            <option value="revista">Revista</option>
+                                        </select>
+                                    </div>
+
+                                    <div style={styles.modalActions}>
+                                        <button type="button" onClick={() => setIsModalOpen(false)} style={styles.cancelBtn}>Cancelar</button>
+                                        <button type="submit" style={styles.saveBtn}>Guardar Edición</button>
+                                    </div>
+                                </>
+                            )}
                         </form>
                     </div>
                 </div>
@@ -210,54 +226,60 @@ const Admin = () => {
 };
 
 const styles = {
-    pageContainer: { maxWidth: '1100px', margin: '80px auto', padding: '20px', fontFamily: 'sans-serif' },
+    pageContainer: { maxWidth: '1100px', margin: '90px auto', padding: '20px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' },
     header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' },
-    title: { color: '#0047BA', margin: 0 },
-    logoutBtn: { padding: '8px 16px', background: '#e0e0e0', color: '#333', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' },
+    title: { color: '#1a1a1a', margin: 0, fontWeight: '700', fontSize: '1.8rem' },
+    logoutBtn: { padding: '8px 16px', background: '#f5f5f5', color: '#666', border: '1px solid #ddd', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' },
 
-    dashboardCard: { background: 'white', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0,0,0,0.05)', padding: '20px', border: '1px solid #eee' },
-    toolbar: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' },
-    subtitle: { margin: 0, fontSize: '1.2rem', color: '#555' },
+    dashboardCard: { background: 'white', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', padding: '24px', border: '1px solid #eaeaea' },
+    toolbar: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' },
+    subtitle: { margin: 0, fontSize: '1.2rem', color: '#444', fontWeight: '600' },
 
     createBtn: {
-        padding: '10px 20px',
-        background: '#28a745',
+        padding: '10px 24px',
+        background: '#0047BA',
         color: 'white',
         border: 'none',
-        borderRadius: '6px',
+        borderRadius: '8px',
         cursor: 'pointer',
         fontSize: '0.95rem',
-        fontWeight: 'bold',
-        whiteSpace: 'nowrap',
-        boxShadow: '0 2px 4px rgba(40, 167, 69, 0.2)'
+        fontWeight: '600',
+        display: 'flex',
+        alignItems: 'center',
+        boxShadow: '0 4px 6px rgba(0, 71, 186, 0.2)',
+        transition: 'background 0.2s'
     },
 
     tableWrapper: { overflowX: 'auto' },
-    table: { width: '100%', borderCollapse: 'collapse', minWidth: '600px' },
-    th: { textAlign: 'left', padding: '15px', borderBottom: '2px solid #eee', color: '#666', background: '#f9f9f9', fontSize: '0.9rem', textTransform: 'uppercase' },
-    td: { padding: '15px', borderBottom: '1px solid #eee', verticalAlign: 'middle', fontSize: '0.95rem' },
-    tr: { transition: 'background 0.2s', '&:hover': { background: '#fcfcfc' } },
+    table: { width: '100%', borderCollapse: 'separate', borderSpacing: '0', minWidth: '700px' },
+    th: { textAlign: 'left', padding: '16px', borderBottom: '1px solid #eaeaea', color: '#666', background: '#f9fafb', fontSize: '0.85rem', textTransform: 'uppercase', fontWeight: '600', letterSpacing: '0.5px' },
+    td: { padding: '16px', borderBottom: '1px solid #eaeaea', verticalAlign: 'middle', fontSize: '0.95rem' },
+    tr: { transition: 'background 0.2s' },
 
-    cellTitle: { fontWeight: 'bold', color: '#333' },
-    badge: { padding: '4px 8px', borderRadius: '12px', background: '#e3f2fd', color: '#0d47a1', fontSize: '0.8rem', textTransform: 'capitalize' },
+    cellTitle: { fontWeight: '600', color: '#1a1a1a' },
+    badge: { padding: '4px 10px', borderRadius: '20px', background: '#e3f2fd', color: '#0047BA', fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 'bold', letterSpacing: '0.5px' },
 
-    deleteBtn: { padding: '6px 12px', background: '#fff0f0', color: '#d32f2f', border: '1px solid #ffcdd2', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' },
+    deleteBtn: { padding: '6px 14px', background: '#fff5f5', color: '#d32f2f', border: '1px solid #ffebee', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '500' },
+
+    thumbWrapper: { width: '40px', height: '56px', background: '#eee', borderRadius: '4px', overflow: 'hidden', border: '1px solid #ddd' },
+    thumb: { width: '100%', height: '100%', objectFit: 'cover' },
 
     // Modal
-    modalOverlay: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 3000 },
-    modalContent: { background: 'white', padding: '30px', borderRadius: '8px', width: '100%', maxWidth: '500px', boxShadow: '0 10px 30px rgba(0,0,0,0.2)' },
-    modalHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #eee', paddingBottom: '10px' },
-    closeBtn: { background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#999' },
+    modalOverlay: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 3000, backdropFilter: 'blur(2px)' },
+    modalContent: { background: 'white', padding: '32px', borderRadius: '16px', width: '100%', maxWidth: '480px', boxShadow: '0 20px 40px rgba(0,0,0,0.15)' },
+    modalHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' },
+    closeBtn: { background: 'none', border: 'none', fontSize: '2rem', cursor: 'pointer', color: '#999', lineHeight: '1' },
 
-    form: { display: 'flex', flexDirection: 'column', gap: '15px' },
-    formGroup: { display: 'flex', flexDirection: 'column', gap: '5px' },
-    label: { fontSize: '0.9rem', fontWeight: 'bold', color: '#555' },
-    input: { padding: '10px', borderRadius: '4px', border: '1px solid #ddd', fontSize: '1rem' },
-    select: { padding: '10px', borderRadius: '4px', border: '1px solid #ddd', fontSize: '1rem', background: 'white' },
+    form: { display: 'flex', flexDirection: 'column', gap: '20px' },
+    formGroup: { display: 'flex', flexDirection: 'column', gap: '8px' },
+    label: { fontSize: '0.9rem', fontWeight: '600', color: '#333' },
+    input: { padding: '12px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '1rem', background: '#fff' },
+    fileInput: { padding: '10px', borderRadius: '8px', border: '1px dashed #ccc', background: '#fafafa', cursor: 'pointer' },
+    select: { padding: '12px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '1rem', background: 'white' },
 
-    modalActions: { display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' },
-    cancelBtn: { padding: '10px 20px', background: '#f5f5f5', border: '1px solid #ddd', borderRadius: '4px', cursor: 'pointer', color: '#666' },
-    saveBtn: { padding: '10px 20px', background: '#0047BA', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }
+    modalActions: { display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '10px' },
+    cancelBtn: { padding: '12px 24px', background: 'white', border: '1px solid #ddd', borderRadius: '8px', cursor: 'pointer', color: '#666', fontWeight: '600' },
+    saveBtn: { padding: '12px 24px', background: '#0047BA', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }
 };
 
 export default Admin;
