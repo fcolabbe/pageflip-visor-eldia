@@ -22,8 +22,8 @@ function App() {
         <Route path="/" element={<MainLayout><Library /></MainLayout>} />
         <Route path="/login" element={<MainLayout><Login /></MainLayout>} />
         <Route path="/admin" element={<MainLayout><Admin /></MainLayout>} />
-        {/* Viewer is standalone full-screen */}
-        <Route path="/visor/:id" element={<ViewerPage />} />
+        {/* Viewer is now part of MainLayout to show Header */}
+        <Route path="/visor/:id" element={<MainLayout><ViewerPage /></MainLayout>} />
       </Routes>
     </Router>
   );

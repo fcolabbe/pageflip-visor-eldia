@@ -77,7 +77,12 @@ const Flipbook = ({ pdfUrl }) => {
                 const maxPageWidth = 1000;
                 potentialPageWidth = Math.min(potentialPageWidth, maxPageWidth);
 
-                setContainerWidth(window.innerWidth > 1000 ? 1000 : window.innerWidth); // Sin margen
+                // 3. Final Width Calculation
+                // If it's desktop, the container needs to hold TWO pages side-by-side.
+                // If mobile, just one page.
+                const finalContainerWidth = mobile ? potentialPageWidth : (potentialPageWidth * 2);
+
+                setContainerWidth(finalContainerWidth);
             }
         };
 
