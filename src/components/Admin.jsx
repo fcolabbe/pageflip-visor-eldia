@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
@@ -13,7 +13,78 @@ const Admin = () => {
         pdf: null,
         pdf_url_source: ''
     });
+    const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
+    const [bulkStart, setBulkStart] = useState('2019-01-03');
+    const [bulkEnd, setBulkEnd] = useState(new Date().toISOString().split('T')[0]);
+    const [bulkLogs, setBulkLogs] = useState([]);
+    const [bulkRunning, setBulkRunning] = useState(false);
+    const stopBulkRef = useRef(false);
+
     const navigate = useNavigate();
+
+    // Bulk Import Logic
+    const handleBulkImport = async () => {
+        setBulkRunning(true);
+        stopBulkRef.current = false;
+        setBulkLogs(prev => [`Initialing process from ${bulkStart} to ${bulkEnd}...`, ...prev]);
+
+        let current = new Date(bulkStart + 'T12:00:00'); // No TZ issues
+        const end = new Date(bulkEnd + 'T12:00:00');
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+
+        while (current <= end) {
+            if (stopBulkRef.current) {
+                setBulkLogs(prev => [`🛑 Process stopped by user.`, ...prev]);
+                break;
+            }
+
+            // Format date for JSON URL: ddMMyyyy
+            const day = String(current.getDate()).padStart(2, '0');
+            const month = String(current.getMonth() + 1).padStart(2, '0');
+            const year = current.getFullYear();
+            const dateStr = `${day}${month}${year}`; // 03012019
+            const dbDate = `${year}-${month}-${day}`; // 2019-01-03
+
+            const jsonUrl = `https://instaphotos.cl/p/portada${dateStr}.json`;
+
+            try {
+                setBulkLogs(prev => [`Processing ${dbDate}...`, ...prev]);
+
+                // Call Backend
+                await axios.post(`${apiUrl}/editions/import-external`, {
+                    json_url: jsonUrl,
+                    date: dbDate
+                });
+
+                setBulkLogs(prev => [`✅ ${dbDate}: Imported successfully`, ...prev]);
+
+            } catch (err) {
+                if (err.response && (err.response.status === 404 || err.response.status === 400)) {
+                    // 404 from backend means JSON not found on external site
+                    setBulkLogs(prev => [`⏭️ ${dbDate}: Skipped (Not found)`, ...prev]);
+                } else {
+                    setBulkLogs(prev => [`❌ ${dbDate}: Error - ${err.message}`, ...prev]);
+                    // Optional: Stop on system error? For now, continue loop.
+                }
+            }
+
+            // Increment Day
+            current.setDate(current.getDate() + 1);
+
+            // Small delay to allow UI updates and prevent hammering
+            await new Promise(r => setTimeout(r, 500));
+        }
+
+        setBulkRunning(false);
+        fetchEditions(); // Refresh table
+    };
+
+    // Watch for stop signal
+    useEffect(() => {
+        if (!bulkRunning) {
+            stopBulkRef.current = true;
+        }
+    }, [bulkRunning]);
 
     // Configure Axios Auth Header
     useEffect(() => {
@@ -108,9 +179,14 @@ const Admin = () => {
             <div style={styles.dashboardCard}>
                 <div style={styles.toolbar}>
                     <h2 style={styles.subtitle}>Listado de Ediciones</h2>
-                    <button onClick={() => setIsModalOpen(true)} style={styles.createBtn}>
-                        <span style={{ fontSize: '1.2rem', marginRight: '5px' }}>+</span> Nueva Edición
-                    </button>
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                        <button onClick={() => setIsBulkModalOpen(true)} style={{ ...styles.createBtn, background: '#28a745' }}>
+                            <span style={{ fontSize: '1.2rem', marginRight: '5px' }}>⚡</span> Importación Masiva
+                        </button>
+                        <button onClick={() => setIsModalOpen(true)} style={styles.createBtn}>
+                            <span style={{ fontSize: '1.2rem', marginRight: '5px' }}>+</span> Nueva Edición
+                        </button>
+                    </div>
                 </div>
 
                 <div style={styles.tableWrapper}>
@@ -262,11 +338,67 @@ const Admin = () => {
 
                                     <div style={styles.modalActions}>
                                         <button type="button" onClick={() => setIsModalOpen(false)} style={styles.cancelBtn}>Cancelar</button>
-                                        <button type="submit" style={styles.saveBtn}>Guardar Edición</button>
+                                        <button type="submit" disabled={uploading} style={styles.saveBtn}>
+                                            {uploading ? 'Creando...' : 'Crear Edición'}
+                                        </button>
                                     </div>
                                 </>
                             )}
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* BULK IMPORT MODAL */}
+            {isBulkModalOpen && (
+                <div style={styles.modalOverlay}>
+                    <div style={styles.modalContent}>
+                        <div style={styles.modalHeader}>
+                            <h3>Importación Histórica Masiva</h3>
+                            {!bulkRunning && <button onClick={() => setIsBulkModalOpen(false)} style={styles.closeBtn}>×</button>}
+                        </div>
+                        <div style={{ padding: '20px' }}>
+                            {!bulkRunning && (
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '20px' }}>
+                                    <div>
+                                        <label style={styles.label}>Fecha Inicio</label>
+                                        <input type="date" value={bulkStart} onChange={e => setBulkStart(e.target.value)} style={styles.input} />
+                                    </div>
+                                    <div>
+                                        <label style={styles.label}>Fecha Fin</label>
+                                        <input type="date" value={bulkEnd} onChange={e => setBulkEnd(e.target.value)} style={styles.input} />
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Logs Console */}
+                            <div style={{
+                                background: '#1e1e1e', color: '#00ff00', padding: '10px',
+                                borderRadius: '4px', height: '200px', overflowY: 'auto',
+                                fontFamily: 'monospace', fontSize: '0.8rem',
+                                marginBottom: '20px', display: 'flex', flexDirection: 'column-reverse'
+                            }}>
+                                {bulkLogs.length === 0 && <span style={{ color: '#555' }}>Listo para iniciar...</span>}
+                                {bulkLogs.map((log, i) => (
+                                    <div key={i}>{log}</div>
+                                ))}
+                            </div>
+
+                            <div style={styles.modalActions}>
+                                {!bulkRunning ? (
+                                    <>
+                                        <button onClick={() => setIsBulkModalOpen(false)} style={styles.cancelBtn}>Cerrar</button>
+                                        <button onClick={handleBulkImport} style={{ ...styles.saveBtn, background: '#28a745' }}>
+                                            Iniciar Importación
+                                        </button>
+                                    </>
+                                ) : (
+                                    <button onClick={() => setBulkRunning(false)} style={{ ...styles.saveBtn, background: '#dc3545' }}>
+                                        DETENER (Pausar)
+                                    </button>
+                                )}
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}
