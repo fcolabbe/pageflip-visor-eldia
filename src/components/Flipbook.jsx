@@ -178,8 +178,8 @@ const Flipbook = ({ pdfUrl }) => {
                     if (zoomText) {
                         zoomText.textContent = `${Math.round(state.scale * 100)}%`;
                     }
-                    // Disable flip on zoom
-                    setIsZoomed(state.scale > 1.1);
+                    // Disable flip on zoom (threshold lowered to 1.001 to catch any zoom)
+                    setIsZoomed(state.scale > 1.001);
                 }}
             >
                 {({ zoomIn, zoomOut, resetTransform, instance }) => (
