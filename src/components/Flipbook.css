@@ -188,15 +188,18 @@ button {
 
     .flipbook-wrapper {
         height: calc(100vh - 60px);
+        justify-content: flex-start;
+        /* Align wrapper content to top */
     }
 
     .zoom-wrapper {
-        padding-top: 0;
-        align-items: center !important;
+        padding-top: 20px;
+        /* Space from header */
+        align-items: flex-start !important;
     }
 
     .zoom-content {
-        align-items: center !important;
+        align-items: flex-start !important;
     }
 }
 

@@ -141,10 +141,10 @@ const Flipbook = ({ pdfUrl }) => {
                 initialScale={1}
                 minScale={1}
                 maxScale={5}
-                centerOnInit={true}
+                centerOnInit={!isMobile}
                 initialPositionX={0}
                 initialPositionY={0}
-                centerZoomedOut={true}
+                centerZoomedOut={!isMobile}
                 disablePadding={true}
                 wheel={{ step: 0.1 }} // Zoom más suave
                 onTransformed={(ref, state) => {
