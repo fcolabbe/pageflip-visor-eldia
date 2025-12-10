@@ -1,19 +1,31 @@
-
 import React from 'react';
-import Header from './components/Header';
-import Flipbook from './components/Flipbook';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Library from './components/Library';
+import ViewerPage from './components/ViewerPage';
+import Login from './components/Login';
+import Admin from './components/Admin';
+import Navbar from './components/Navbar';
+import './App.css';
 
-// PDF de prueba en /public
-const samplePdf = '/sample.pdf';
+// Layout wrapper for pages with Navbar
+const MainLayout = ({ children }) => (
+  <>
+    <Navbar />
+    <main>{children}</main>
+  </>
+);
 
 function App() {
   return (
-    <div className="App">
-      <Header />
-      <main>
-        <Flipbook pdfUrl={samplePdf} />
-      </main>
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/" element={<MainLayout><Library /></MainLayout>} />
+        <Route path="/login" element={<MainLayout><Login /></MainLayout>} />
+        <Route path="/admin" element={<MainLayout><Admin /></MainLayout>} />
+        {/* Viewer is standalone full-screen */}
+        <Route path="/visor/:id" element={<ViewerPage />} />
+      </Routes>
+    </Router>
   );
 }
 
