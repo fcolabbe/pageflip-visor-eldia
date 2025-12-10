@@ -6,10 +6,12 @@ const Admin = () => {
     const [editions, setEditions] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [uploading, setUploading] = useState(false);
+    const [uploadMode, setUploadMode] = useState('file'); // 'file' or 'url'
     const [formData, setFormData] = useState({
         edition_date: '',
         type: 'diario',
-        pdf: null
+        pdf: null,
+        pdf_url_source: ''
     });
     const navigate = useNavigate();
 
@@ -59,7 +61,12 @@ const Admin = () => {
             const data = new FormData();
             data.append('edition_date', formData.edition_date);
             data.append('type', formData.type);
-            data.append('pdf', formData.pdf);
+
+            if (uploadMode === 'file' && formData.pdf) {
+                data.append('pdf', formData.pdf);
+            } else if (uploadMode === 'url' && formData.pdf_url_source) {
+                data.append('pdf_url_source', formData.pdf_url_source);
+            }
 
             const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
             await axios.post(`${apiUrl}/editions`, data, {
@@ -69,13 +76,13 @@ const Admin = () => {
             // Reset and Refresh
             setIsModalOpen(false);
             setUploading(false);
-            setFormData({ edition_date: '', type: 'diario', pdf: null });
+            setFormData({ edition_date: '', type: 'diario', pdf: null, pdf_url_source: '' });
             fetchEditions();
             alert("Edición creada exitosamente");
         } catch (err) {
             console.error("Error creating edition", err);
             setUploading(false);
-            alert("Error al crear la edición");
+            alert("Error al crear la edición: " + (err.response?.data?.message || err.message));
         }
     };
 
@@ -170,23 +177,61 @@ const Admin = () => {
                         <form onSubmit={handleCreate} style={styles.form}>
                             {uploading ? (
                                 <div style={{ textAlign: 'center', padding: '20px' }}>
-                                    <p>Subiendo y procesando archivo...</p>
-                                    <p style={{ fontSize: '0.8rem', color: '#666' }}>Esto puede tomar unos segundos.</p>
+                                    <p>Procesando archivo... por favor espere.</p>
+                                    <div style={{ marginTop: '10px', height: '4px', background: '#eee', borderRadius: '2px', overflow: 'hidden' }}>
+                                        <div style={{ height: '100%', width: '50%', background: '#0047BA', animation: 'progress 1s infinite' }}></div>
+                                    </div>
+                                    <style>{`@keyframes progress { 0% { transform: translateX(-100%); } 100% { transform: translateX(200%); } }`}</style>
                                 </div>
                             ) : (
                                 <>
-                                    <div style={styles.formGroup}>
-                                        <label style={styles.label}>Archivo PDF</label>
-                                        <input
-                                            type="file"
-                                            name="pdf"
-                                            accept="application/pdf"
-                                            onChange={handleInputChange}
-                                            style={styles.fileInput}
-                                            required
-                                        />
-                                        <small style={{ color: '#666', fontSize: '0.8rem' }}>La portada se extraerá automáticamente de la primera página.</small>
+                                    {/* Source Toggle */}
+                                    <div style={styles.toggleContainer}>
+                                        <button
+                                            type="button"
+                                            onClick={() => setUploadMode('file')}
+                                            style={uploadMode === 'file' ? styles.toggleBtnActive : styles.toggleBtn}
+                                        >
+                                            Subir Archivo
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setUploadMode('url')}
+                                            style={uploadMode === 'url' ? styles.toggleBtnActive : styles.toggleBtn}
+                                        >
+                                            Importar desde URL
+                                        </button>
                                     </div>
+
+                                    {uploadMode === 'file' ? (
+                                        <div style={styles.formGroup}>
+                                            <label style={styles.label}>Archivo PDF</label>
+                                            <input
+                                                type="file"
+                                                name="pdf"
+                                                accept="application/pdf"
+                                                onChange={handleInputChange}
+                                                style={styles.fileInput}
+                                                required
+                                            />
+                                            <small style={{ color: '#666', fontSize: '0.8rem' }}>La portada se extraerá automáticamente.</small>
+                                        </div>
+                                    ) : (
+                                        <div style={styles.formGroup}>
+                                            <label style={styles.label}>URL del PDF</label>
+                                            <input
+                                                type="url"
+                                                name="pdf_url_source"
+                                                value={formData.pdf_url_source}
+                                                onChange={handleInputChange}
+                                                placeholder="https://ejemplo.com/archivo.pdf"
+                                                style={styles.input}
+                                                required
+                                            />
+                                            <small style={{ color: '#666', fontSize: '0.8rem' }}>El sistema descargará el PDF y generará la portada.</small>
+                                        </div>
+                                    )}
+
                                     <div style={styles.formGroup}>
                                         <label style={styles.label}>Fecha de Edición</label>
                                         <input
@@ -276,6 +321,10 @@ const styles = {
     input: { padding: '12px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '1rem', background: '#fff' },
     fileInput: { padding: '10px', borderRadius: '8px', border: '1px dashed #ccc', background: '#fafafa', cursor: 'pointer' },
     select: { padding: '12px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '1rem', background: 'white' },
+
+    toggleContainer: { display: 'flex', background: '#f5f5f5', borderRadius: '8px', padding: '4px', gap: '5px' },
+    toggleBtn: { flex: 1, padding: '8px', border: 'none', background: 'transparent', cursor: 'pointer', borderRadius: '6px', fontSize: '0.9rem', color: '#666' },
+    toggleBtnActive: { flex: 1, padding: '8px', border: 'none', background: 'white', cursor: 'pointer', borderRadius: '6px', fontSize: '0.9rem', color: '#0047BA', fontWeight: 'bold', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' },
 
     modalActions: { display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '10px' },
     cancelBtn: { padding: '12px 24px', background: 'white', border: '1px solid #ddd', borderRadius: '8px', cursor: 'pointer', color: '#666', fontWeight: '600' },
