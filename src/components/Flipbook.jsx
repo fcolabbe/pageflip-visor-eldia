@@ -50,13 +50,12 @@ const Flipbook = ({ pdfUrl }) => {
             const container = document.getElementById('flipbook-container');
             if (container) {
                 const availableWidth = container.clientWidth;
-                // Aumentamos margen vertical para que los controles NO tapen el libro
-                const availableHeight = window.innerHeight - 160;
+                // Aumentamos margen drásticamente para asegurar que NO tape herramientas (Header + Controls + Safety)
+                const availableHeight = window.innerHeight - 190;
 
                 const mobile = availableWidth < 768;
                 setIsMobile(mobile);
 
-                // Relación de aspecto del diario
                 const aspectRatio = 1.42;
 
                 // 1. Calcular ancho basado en el espacio horizontal
@@ -67,7 +66,6 @@ const Flipbook = ({ pdfUrl }) => {
                     potentialPageWidth = availableHeight / aspectRatio;
                 }
 
-                // 3. Establecer límites máximos (Relajados significativamente)
                 const maxPageWidth = 1000;
                 potentialPageWidth = Math.min(potentialPageWidth, maxPageWidth);
 
@@ -143,10 +141,10 @@ const Flipbook = ({ pdfUrl }) => {
                 initialScale={1}
                 minScale={1}
                 maxScale={5}
-                centerOnInit={false}
+                centerOnInit={true}
                 initialPositionX={0}
                 initialPositionY={0}
-                centerZoomedOut={false}
+                centerZoomedOut={true}
                 disablePadding={true}
                 wheel={{ step: 0.1 }} // Zoom más suave
                 onTransformed={(ref, state) => {

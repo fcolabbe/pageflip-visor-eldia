@@ -81,12 +81,10 @@
     width: 100%;
     height: 100%;
     flex: 1;
-    /* Ocupar todo el espacio disponible */
     display: flex;
-    align-items: flex-start;
-    /* Align to top instead of center */
-    padding-top: 30px;
-    /* Small safe margin from header */
+    align-items: center;
+    /* Volver a centrar verticalmente */
+    padding-top: 0;
     justify-content: center;
     overflow: hidden;
 }
@@ -151,44 +149,54 @@ button {
 /* Mobile Controls */
 @media (max-width: 768px) {
     .controls {
-        bottom: 20px;
-        padding: 8px 15px;
-        gap: 8px;
-        width: 90%;
-        justify-content: space-between;
-        flex-wrap: wrap;
+        bottom: 15px;
+        padding: 5px 8px;
+        gap: 4px;
+        width: 98%;
+        max-width: 100%;
+        justify-content: center;
+        flex-wrap: nowrap;
+        /* Force single line */
+        overflow-x: auto;
+        /* Safety scroll */
+    }
+
+    /* Hide scrollbar for clean look */
+    .controls::-webkit-scrollbar {
+        display: none;
     }
 
     button {
-        width: 32px;
-        height: 32px;
-        font-size: 0.9rem;
+        width: 28px;
+        height: 28px;
+        min-width: 28px;
+        /* Prevent shrink */
+        font-size: 0.8rem;
     }
 
     .page-info {
-        font-size: 0.8rem;
+        font-size: 0.75rem;
         min-width: auto;
+        padding: 0 4px;
+        white-space: nowrap;
     }
 
     .separator {
-        height: 15px;
-        margin: 0 2px;
+        display: none;
+        /* Hide separators on mobile to save space */
     }
 
     .flipbook-wrapper {
         height: calc(100vh - 60px);
-        /* More space on mobile */
     }
 
     .zoom-wrapper {
-        padding-top: 10px;
-        /* Less padding on mobile */
-        align-items: flex-start !important;
+        padding-top: 0;
+        align-items: center !important;
     }
 
     .zoom-content {
-        align-items: flex-start !important;
-        /* Force top alignment */
+        align-items: center !important;
     }
 }
 
