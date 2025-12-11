@@ -138,7 +138,7 @@
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
 }
 
-button {
+.controls button {
     background: transparent;
     color: #333;
     border: none;
@@ -173,7 +173,7 @@ button {
         display: none;
     }
 
-    button {
+    .controls button {
         width: 28px;
         height: 28px;
         min-width: 28px;
@@ -212,13 +212,13 @@ button {
     }
 }
 
-button:hover {
+.controls button:hover {
     background: rgba(0, 84, 166, 0.1);
     color: #0054a6;
     transform: scale(1.1);
 }
 
-button:active {
+.controls button:active {
     transform: scale(0.95);
     background: rgba(0, 84, 166, 0.2);
 }
