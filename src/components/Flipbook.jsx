@@ -154,28 +154,53 @@ const Flipbook = ({ pdfUrl }) => {
         }
     };
 
-    const handleDownloadPage = () => {
-        // Simple hack: Encontrar el canvas visible en el viewport
-        // Nota: react-pdf renderiza en canvas. react-pageflip mueve estos canvas.
-        const currentCanvas = document.querySelector(`.react-pdf__Page[data-page-number="${currentPage}"] canvas`);
+    const [showDownloadModal, setShowDownloadModal] = useState(false);
 
+    const downloadCanvas = (pageNumber) => {
+        const currentCanvas = document.querySelector(`.react-pdf__Page[data-page-number="${pageNumber}"] canvas`);
         if (currentCanvas) {
             const link = document.createElement('a');
-            link.download = `diario-eldia-pag-${currentPage}.png`;
+            link.download = `diario-eldia-pag-${pageNumber}.png`;
             link.href = currentCanvas.toDataURL();
             link.click();
         } else {
-            // Fallback: Try to find ANY visible canvas if the specific one fails (rare)
-            const visibleCanvas = document.querySelector('.react-pdf__Page__canvas');
-            if (visibleCanvas) {
-                const link = document.createElement('a');
-                link.download = `diario-eldia-pag-${currentPage}.png`;
-                link.href = visibleCanvas.toDataURL();
-                link.click();
-            } else {
-                alert("Espera a que la página cargue completamente para descargarla.");
-            }
+            // Fallback only if we are absolutely sure it's the requested page (avoid wrong page download)
+            console.warn(`Canvas for page ${pageNumber} not found.`);
+            alert(`No se pudo generar la imagen de la página ${pageNumber}. Asegúrate de que esté visible.`);
         }
+    };
+
+    const handleDownloadClick = () => {
+        // Logic:
+        // Mobile -> Single Page -> Direct Download
+        // Page 1 -> Single Page -> Direct Download
+        // Desktop (>1) -> Spread -> Check if Even
+
+        // Assumption: Cover is Page 1.
+        // Page 2,3 is a spread. 4,5 is a spread.
+        // If currentPage is Even (2, 4, 8), it is Left. Right is +1.
+
+        const isSpread = !isMobile && currentPage > 1 && (currentPage % 2 === 0);
+
+        if (isSpread) {
+            setShowDownloadModal(true);
+        } else {
+            // Single page download
+            downloadCanvas(currentPage);
+        }
+    };
+
+    const handleDownloadSelection = (option) => {
+        // option: 'left', 'right', 'both'
+        if (option === 'left') {
+            downloadCanvas(currentPage);
+        } else if (option === 'right') {
+            downloadCanvas(currentPage + 1);
+        } else if (option === 'both') {
+            downloadCanvas(currentPage);
+            setTimeout(() => downloadCanvas(currentPage + 1), 500); // Delay to ensure browser handles both
+        }
+        setShowDownloadModal(false);
     };
 
     return (
@@ -282,7 +307,7 @@ const Flipbook = ({ pdfUrl }) => {
                                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                                     </button>
                                 </a>
-                                <button onClick={handleDownloadPage} title="Descargar Página Actual (Imagen)">
+                                <button onClick={handleDownloadClick} title="Descargar Página (Imagen)">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                                 </button>
                                 <button onClick={handleShare} title="Compartir">
@@ -294,6 +319,57 @@ const Flipbook = ({ pdfUrl }) => {
                                 <button onClick={toggleFullScreen} title="Pantalla completa">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>
                                 </button>
+                            </div>
+                        )}
+
+                        {/* Download Selection Modal */}
+                        {showDownloadModal && (
+                            <div style={{
+                                position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                                background: 'rgba(0,0,0,0.7)', zIndex: 10000,
+                                display: 'flex', alignItems: 'center', justifyContent: 'center'
+                            }}>
+                                <div style={{
+                                    background: 'white', padding: '25px', borderRadius: '12px',
+                                    width: '320px', textAlign: 'center', boxShadow: '0 10px 30px rgba(0,0,0,0.3)'
+                                }}>
+                                    <h3 style={{ marginTop: 0, marginBottom: '20px', color: '#333' }}>Descargar Imagen</h3>
+                                    <p style={{ color: '#666', marginBottom: '20px' }}>Estás viendo dos páginas. ¿Cuál deseas descargar?</p>
+
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                        <button
+                                            onClick={() => handleDownloadSelection('left')}
+                                            style={{ padding: '12px', background: '#f0f0f0', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '500' }}
+                                        >
+                                            Página Izquierda ({currentPage})
+                                        </button>
+
+                                        {(currentPage + 1 <= (numPages || 0)) && (
+                                            <button
+                                                onClick={() => handleDownloadSelection('right')}
+                                                style={{ padding: '12px', background: '#f0f0f0', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '500' }}
+                                            >
+                                                Página Derecha ({currentPage + 1})
+                                            </button>
+                                        )}
+
+                                        {(currentPage + 1 <= (numPages || 0)) && (
+                                            <button
+                                                onClick={() => handleDownloadSelection('both')}
+                                                style={{ padding: '12px', background: '#0047BA', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
+                                            >
+                                                Descargar Ambas
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    <button
+                                        onClick={() => setShowDownloadModal(false)}
+                                        style={{ marginTop: '20px', background: 'none', border: 'none', color: '#999', cursor: 'pointer', fontSize: '0.9rem' }}
+                                    >
+                                        Cancelar
+                                    </button>
+                                </div>
                             </div>
                         )}
                     </>

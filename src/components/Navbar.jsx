@@ -42,7 +42,7 @@ const Navbar = () => {
                 </Link>
 
                 <div style={styles.links}>
-                    <Link to="/login" style={styles.link}>Admin</Link>
+                    {/* Admin button removed as requested */}
                 </div>
             </div>
         </nav>

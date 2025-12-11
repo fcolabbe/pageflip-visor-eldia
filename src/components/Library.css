@@ -1,0 +1,300 @@
+.library-grid-container {
+    max-width: 1200px;
+    margin: 90px auto 40px;
+    padding: 20px;
+    min-height: 80vh;
+}
+
+.library-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #0047BA;
+    padding-bottom: 10px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.library-title {
+    margin: 0;
+    color: #333;
+    font-size: 1.8rem;
+    white-space: nowrap;
+}
+
+.library-search-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.library-search-input {
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+    font-size: 0.9rem;
+    outline: none;
+    color: #555;
+}
+
+.library-search-select {
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+    font-size: 0.9rem;
+    background-color: white;
+    outline: none;
+    color: #555;
+    cursor: pointer;
+}
+
+.library-search-btn {
+    padding: 8px 16px;
+    background: #0047BA;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: bold;
+    transition: background 0.2s;
+    white-space: nowrap;
+}
+
+.library-search-btn:hover {
+    background: #00358a;
+}
+
+.library-clear-btn {
+    padding: 8px 12px;
+    background: #f0f0f0;
+    color: #666;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: bold;
+    line-height: 1;
+}
+
+/* Responsive Visibility */
+.desktop-only {
+    display: flex !important;
+}
+
+.mobile-only {
+    display: none !important;
+}
+
+/* Mobile Search Trigger Icon style */
+.mobile-search-trigger {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #0047BA;
+    padding: 10px;
+    border-radius: 50%;
+    transition: background 0.2s;
+}
+
+.mobile-search-trigger:hover {
+    background: rgba(0, 71, 186, 0.1);
+}
+
+/* Modal Styles */
+.library-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    z-index: 2000;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding-top: 100px;
+    backdrop-filter: blur(2px);
+}
+
+.library-modal-content {
+    background-color: white;
+    width: 90%;
+    max-width: 400px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateY(-30px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.library-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid #eee;
+}
+
+.library-modal-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #333;
+}
+
+.close-modal-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #999;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.library-modal-body {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* Specific styles for inputs in modal */
+.library-modal-body .library-search-input,
+.library-modal-body .library-search-select {
+    width: 100%;
+    padding: 12px 15px;
+    font-size: 1rem;
+    box-sizing: border-box;
+    background-color: white;
+    border: 1px solid #ddd;
+    /* Ensure border is visible */
+    border-radius: 6px;
+    height: 48px;
+    /* Fixed height for consistency */
+}
+
+/* Button styles in modal - Ensure Blue Background is kept */
+.library-modal-body .library-search-btn {
+    width: 100%;
+    padding: 12px 15px;
+    font-size: 1rem;
+    box-sizing: border-box;
+    background-color: #0047BA;
+    /* Restore Blue */
+    color: white;
+    /* Ensure text is white */
+    margin-top: 10px;
+    height: 48px;
+}
+
+.library-modal-body .library-clear-btn {
+    width: 100%;
+    padding: 12px 15px;
+    font-size: 1rem;
+    box-sizing: border-box;
+    height: 48px;
+    background-color: #f0f0f0;
+}
+
+/* Date input specific styling */
+.library-modal-body input[type="date"],
+.library-modal-body input[type="text"].date-placeholder {
+    appearance: none;
+    /* Remove default styling to apply custom */
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Cline x1='16' y1='2' x2='16' y2='6'%3E%3C/line%3E%3Cline x1='8' y1='2' x2='8' y2='6'%3E%3C/line%3E%3Cline x1='3' y1='10' x2='21' y2='10'%3E%3C/line%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+    background-size: 20px;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+    .library-grid-container {
+        padding: 15px;
+    }
+
+    .desktop-only {
+        display: none !important;
+    }
+
+    .mobile-only {
+        display: block !important;
+    }
+
+    .library-header {
+        /* Keep row for title + search icon */
+        flex-direction: row;
+        align-items: center;
+        gap: 15px;
+        padding-bottom: 15px;
+    }
+
+    .library-title {
+        font-size: 1.5rem;
+        /* Allow title to take flexible space but not wrap unnecessarily */
+        flex: 1;
+    }
+
+    .library-search-container {
+        width: 100%;
+        display: grid;
+        /* Mobile Layout: 
+           Title (full)
+           Type (full)
+           Date (Grow) Search (Auto) Clear (Auto)
+        */
+        grid-template-columns: 1fr auto auto;
+        gap: 10px;
+    }
+
+    /* Force full width for inputs on mobile usually, but let's be smart */
+    .library-search-input:first-child {
+        /* Title */
+        grid-column: 1 / -1;
+    }
+
+    .library-search-select {
+        grid-column: 1 / -1;
+        width: 100%;
+    }
+
+    /* Date input */
+    .library-search-input:nth-last-child(3) {
+        /* Date is 3rd from end if Clear exists, or 2nd if no clear... logic tricky with dynamic Clear btn */
+        /* Better to rely on order */
+    }
+
+    /* Let's simplify mobile grid to just stack everything for safety */
+    .library-search-container {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .library-search-input,
+    .library-search-select {
+        width: 100%;
+    }
+
+    .library-search-btn {
+        width: 100%;
+    }
+
+    .library-clear-btn {
+        width: 100%;
+        margin-top: -5px;
+        /* compact */
+    }
+}

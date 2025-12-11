@@ -1,14 +1,26 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+import './Library.css';
 
 const Library = () => {
     const [editions, setEditions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(1);
     const [meta, setMeta] = useState({});
-    const [dateFilter, setDateFilter] = useState(''); // Input value
-    const [searchQuery, setSearchQuery] = useState(''); // Active filter
+
+    // Filter Inputs (Staging)
+    const [dateFilter, setDateFilter] = useState('');
+    const [titleFilter, setTitleFilter] = useState('');
+    const [typeFilter, setTypeFilter] = useState('');
+
+    // Active Search Queries
+    const [searchDate, setSearchDate] = useState('');
+    const [searchTitle, setSearchTitle] = useState('');
+    const [searchType, setSearchType] = useState('');
+
+    // Mobile Search Modal State
+    const [showMobileSearch, setShowMobileSearch] = useState(false);
 
     useEffect(() => {
         const fetchEditions = async () => {
@@ -17,7 +29,11 @@ const Library = () => {
                 // Use VITE_API_URL or fallback
                 const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
                 const params = { page, limit: 15 };
-                if (searchQuery) params.date = searchQuery;
+
+                // Active Filters
+                if (searchDate) params.date = searchDate;
+                if (searchTitle) params.title = searchTitle;
+                if (searchType) params.type = searchType;
 
                 const res = await axios.get(`${apiUrl}/editions`, { params });
 
@@ -38,47 +54,91 @@ const Library = () => {
         };
 
         fetchEditions();
-    }, [page, searchQuery]); // Depend on searchQuery, not dateFilter
+    }, [page, searchDate, searchTitle, searchType]);
 
     const handleSearch = () => {
-        setSearchQuery(dateFilter);
+        setSearchDate(dateFilter);
+        setSearchTitle(titleFilter);
+        setSearchType(typeFilter);
         setPage(1);
+        setShowMobileSearch(false); // Close modal on search
     };
 
     const handleClear = () => {
         setDateFilter('');
-        setSearchQuery('');
+        setTitleFilter('');
+        setTypeFilter('');
+
+        setSearchDate('');
+        setSearchTitle('');
+        setSearchType('');
+
         setPage(1);
+        setShowMobileSearch(false);
     };
 
-    // Helper to format date correcting timezone offset
-    // Should display the date as stored in DB (YYYY-MM-DD)
+    // ... existing helpers ...
     const formatDate = (dateString) => {
         if (!dateString) return '';
-        // Append T12:00:00 to ensure it falls in the middle of the day for local time conversion
-        // Or simply split string parts to avoid timezone conversion entirely
         const [y, m, d] = dateString.split('T')[0].split('-');
         return `${d}/${m}/${y}`;
     };
 
-    // Pagination Logic
+    // Reusable Search Controls Component (Internal)
+    const SearchControls = () => (
+        <>
+            <input
+                type="text"
+                value={titleFilter}
+                onChange={(e) => setTitleFilter(e.target.value)}
+                className="library-search-input"
+                placeholder="Buscar por título..."
+            />
+            <select
+                value={typeFilter}
+                onChange={(e) => setTypeFilter(e.target.value)}
+                className="library-search-select"
+            >
+                <option value="">Tipo de publicación</option>
+                <option value="Diario el Día">Diario el Día</option>
+                <option value="Revista Vida Hogar">Revista Vida Hogar</option>
+                <option value="Revista Vida Salud">Revista Vida Salud</option>
+                <option value="Boletin Comunidades">Boletín Comunidades</option>
+                <option value="Revista Peludos">Revista Peludos</option>
+                <option value="Edicion Especial">Edición Especial</option>
+            </select>
+            <input
+                type="text"
+                value={dateFilter}
+                onChange={(e) => setDateFilter(e.target.value)}
+                className="library-search-input date-placeholder"
+                placeholder="Seleccionar Fecha"
+                onFocus={(e) => (e.target.type = "date")}
+                onBlur={(e) => {
+                    if (!e.target.value) e.target.type = "text";
+                }}
+            />
+            <button onClick={handleSearch} className="library-search-btn">
+                Buscar
+            </button>
+            {(dateFilter || titleFilter || typeFilter) && (
+                <button onClick={handleClear} className="library-clear-btn">
+                    ×
+                </button>
+            )}
+        </>
+    );
+
+    // ... renderPagination remains the same ...
     const renderPagination = () => {
         const totalPages = meta.totalPages || 1;
         if (totalPages <= 1) return null;
-
         const pages = [];
-        // Simple logic: Show all if small, or range around current
-        // For simplicity, let's show max 5 pages around current
         let start = Math.max(1, page - 2);
         let end = Math.min(totalPages, page + 2);
-
         if (start > 1) pages.push(1);
         if (start > 2) pages.push('...');
-
-        for (let i = start; i <= end; i++) {
-            pages.push(i);
-        }
-
+        for (let i = start; i <= end; i++) pages.push(i);
         if (end < totalPages - 1) pages.push('...');
         if (end < totalPages) pages.push(totalPages);
 
@@ -91,7 +151,6 @@ const Library = () => {
                 >
                     &larr;
                 </button>
-
                 {pages.map((p, idx) => (
                     <button
                         key={idx}
@@ -107,7 +166,6 @@ const Library = () => {
                         {p}
                     </button>
                 ))}
-
                 <button
                     disabled={page >= totalPages}
                     onClick={() => setPage(p => p + 1)}
@@ -122,34 +180,42 @@ const Library = () => {
     if (loading) return <div style={{ padding: '100px', textAlign: 'center' }}>Cargando Biblioteca...</div>;
 
     return (
-        <div style={styles.gridContainer}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '2px solid #0047BA', paddingBottom: '10px' }}>
-                <h2 style={{ margin: 0, color: '#333' }}>Últimas Ediciones</h2>
+        <div className="library-grid-container">
+            <div className="library-header">
+                <h2 className="library-title">Últimas Ediciones</h2>
 
-                <div style={styles.searchContainer}>
-                    <input
-                        type="date"
-                        value={dateFilter}
-                        onChange={(e) => setDateFilter(e.target.value)}
-                        style={styles.searchInput}
-                        placeholder="Buscar por fecha"
-                    />
-                    <button
-                        onClick={handleSearch}
-                        style={styles.searchBtn}
-                    >
-                        Buscar
-                    </button>
-                    {dateFilter && (
-                        <button
-                            onClick={handleClear}
-                            style={styles.clearBtn}
-                        >
-                            ×
-                        </button>
-                    )}
+                {/* DESKTOP SEARCH BAR */}
+                <div className="library-search-container desktop-only">
+                    <SearchControls />
                 </div>
+
+                {/* MOBILE SEARCH TRIGGER */}
+                <button
+                    className="mobile-search-trigger mobile-only"
+                    onClick={() => setShowMobileSearch(true)}
+                    title="Buscar"
+                >
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                </button>
             </div>
+
+            {/* MOBILE SEARCH MODAL */}
+            {showMobileSearch && (
+                <div className="library-modal-overlay">
+                    <div className="library-modal-content">
+                        <div className="library-modal-header">
+                            <h3>Búsqueda Avanzada</h3>
+                            <button onClick={() => setShowMobileSearch(false)} className="close-modal-btn">×</button>
+                        </div>
+                        <div className="library-modal-body">
+                            <SearchControls />
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <div style={styles.grid}>
                 {editions.map(edition => (
@@ -181,52 +247,7 @@ const Library = () => {
 };
 
 const styles = {
-    gridContainer: {
-        maxWidth: '1200px',
-        margin: '90px auto 40px', // Adjusted top margin
-        padding: '20px',
-        minHeight: '80vh' // Ensure it takes space
-    },
-    // title: removed in favor of flex header
-    searchContainer: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: '8px'
-    },
-    searchInput: {
-        padding: '8px 12px',
-        borderRadius: '6px',
-        border: '1px solid #ddd',
-        fontSize: '0.9rem',
-        outline: 'none',
-        color: '#555'
-    },
-    searchBtn: {
-        padding: '8px 16px',
-        background: '#0047BA',
-        color: 'white',
-        border: 'none',
-        borderRadius: '6px',
-        cursor: 'pointer',
-        fontSize: '0.9rem',
-        fontWeight: 'bold',
-        transition: 'background 0.2s',
-        whiteSpace: 'nowrap', // Prevent text wrapping
-        flexShrink: 0 // Prevent shrinking
-    },
-    clearBtn: {
-        padding: '8px 12px',
-        background: '#f0f0f0',
-        color: '#666',
-        border: '1px solid #ddd',
-        borderRadius: '6px',
-        cursor: 'pointer',
-        fontSize: '1rem',
-        fontWeight: 'bold',
-        lineHeight: '1',
-        whiteSpace: 'nowrap', // Prevent text wrapping
-        flexShrink: 0 // Prevent shrinking
-    },
+    // gridContainer, searchContainer, etc moved to CSS
     grid: {
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
