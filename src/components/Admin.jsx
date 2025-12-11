@@ -260,7 +260,11 @@ const Admin = () => {
                         <button onClick={() => setIsBulkModalOpen(true)} style={{ ...styles.createBtn, background: '#28a745' }}>
                             <span style={{ fontSize: '1.2rem', marginRight: '5px' }}>⚡</span> Importación Masiva
                         </button>
-                        <button onClick={() => setIsModalOpen(true)} style={styles.createBtn}>
+                        <button onClick={() => {
+                            setEditingId(null);
+                            setFormData({ edition_date: '', type: 'Diario el Día', pdf: null, pdf_url_source: '' });
+                            setIsModalOpen(true);
+                        }} style={styles.createBtn}>
                             <span style={{ fontSize: '1.2rem', marginRight: '5px' }}>+</span> Nueva Edición
                         </button>
                     </div>
@@ -299,9 +303,14 @@ const Admin = () => {
                                         <span style={styles.badge}>{edition.type}</span>
                                     </td>
                                     <td style={styles.td}>
-                                        <button onClick={() => handleDelete(edition.id)} style={styles.deleteBtn}>
-                                            Eliminar
-                                        </button>
+                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                            <button onClick={() => handleEdit(edition)} style={styles.editBtn}>
+                                                Editar
+                                            </button>
+                                            <button onClick={() => handleDelete(edition.id)} style={styles.deleteBtn}>
+                                                Eliminar
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             ))}
@@ -325,10 +334,10 @@ const Admin = () => {
                 <div style={styles.modalOverlay}>
                     <div style={styles.modalContent}>
                         <div style={styles.modalHeader}>
-                            <h3>Nueva Edición</h3>
+                            <h3>{editingId ? 'Editar Edición' : 'Nueva Edición'}</h3>
                             {!uploading && <button onClick={() => setIsModalOpen(false)} style={styles.closeBtn}>×</button>}
                         </div>
-                        <form onSubmit={handleCreate} style={styles.form}>
+                        <form onSubmit={handleSubmit} style={styles.form}>
                             {uploading ? (
                                 <div style={{ textAlign: 'center', padding: '20px' }}>
                                     <p>Procesando archivo... por favor espere.</p>
@@ -359,16 +368,18 @@ const Admin = () => {
 
                                     {uploadMode === 'file' ? (
                                         <div style={styles.formGroup}>
-                                            <label style={styles.label}>Archivo PDF</label>
+                                            <label style={styles.label}>Archivo PDF {editingId && '(Opcional)'}</label>
                                             <input
                                                 type="file"
                                                 name="pdf"
                                                 accept="application/pdf"
                                                 onChange={handleInputChange}
                                                 style={styles.fileInput}
-                                                required
+                                                required={!editingId}
                                             />
-                                            <small style={{ color: '#666', fontSize: '0.8rem' }}>La portada se extraerá automáticamente.</small>
+                                            <small style={{ color: '#666', fontSize: '0.8rem' }}>
+                                                {editingId ? 'Subir para reemplazar el actual.' : 'La portada se extraerá automáticamente.'}
+                                            </small>
                                         </div>
                                     ) : (
                                         <div style={styles.formGroup}>
@@ -380,7 +391,7 @@ const Admin = () => {
                                                 onChange={handleInputChange}
                                                 placeholder="https://ejemplo.com/archivo.pdf"
                                                 style={styles.input}
-                                                required
+                                                required={!editingId}
                                             />
                                             <small style={{ color: '#666', fontSize: '0.8rem' }}>El sistema descargará el PDF y generará la portada.</small>
                                         </div>
@@ -417,7 +428,7 @@ const Admin = () => {
                                     <div style={styles.modalActions}>
                                         <button type="button" onClick={() => setIsModalOpen(false)} style={styles.cancelBtn}>Cancelar</button>
                                         <button type="submit" disabled={uploading} style={styles.saveBtn}>
-                                            {uploading ? 'Creando...' : 'Crear Edición'}
+                                            {uploading ? 'Guardando...' : (editingId ? 'Guardar Cambios' : 'Crear Edición')}
                                         </button>
                                     </div>
                                 </>
@@ -430,11 +441,13 @@ const Admin = () => {
             {/* BULK IMPORT MODAL */}
             {isBulkModalOpen && (
                 <div style={styles.modalOverlay}>
+                    {/* Reuse existing bulk modal code, just pass through */}
                     <div style={styles.modalContent}>
                         <div style={styles.modalHeader}>
                             <h3>Importación Histórica Masiva</h3>
                             {!bulkRunning && <button onClick={() => setIsBulkModalOpen(false)} style={styles.closeBtn}>×</button>}
                         </div>
+                        {/* ... Body of Bulk Import ... */}
                         <div style={{ padding: '20px' }}>
                             {!bulkRunning && (
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '20px' }}>
@@ -495,7 +508,7 @@ const styles = {
     subtitle: { margin: 0, fontSize: '1.2rem', color: '#444', fontWeight: '600' },
 
     createBtn: {
-        padding: '10px 24px',
+        padding: '10px 20px', // Reduced padding slightly
         background: '#0047BA',
         color: 'white',
         border: 'none',
@@ -506,7 +519,8 @@ const styles = {
         display: 'flex',
         alignItems: 'center',
         boxShadow: '0 4px 6px rgba(0, 71, 186, 0.2)',
-        transition: 'background 0.2s'
+        transition: 'background 0.2s',
+        whiteSpace: 'nowrap' // FIX: Prevent text wrapping
     },
 
     tableWrapper: { overflowX: 'auto' },
@@ -519,6 +533,7 @@ const styles = {
     badge: { padding: '4px 10px', borderRadius: '20px', background: '#e3f2fd', color: '#0047BA', fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 'bold', letterSpacing: '0.5px' },
 
     deleteBtn: { padding: '6px 14px', background: '#fff5f5', color: '#d32f2f', border: '1px solid #ffebee', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '500' },
+    editBtn: { padding: '6px 14px', background: '#f0f7ff', color: '#0047BA', border: '1px solid #cce5ff', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '500' }, // Added Edit Btn Style
 
     thumbWrapper: { width: '40px', height: '56px', background: '#eee', borderRadius: '4px', overflow: 'hidden', border: '1px solid #ddd' },
     thumb: { width: '100%', height: '100%', objectFit: 'cover' },
@@ -541,8 +556,8 @@ const styles = {
     toggleBtnActive: { flex: 1, padding: '8px', border: 'none', background: 'white', cursor: 'pointer', borderRadius: '6px', fontSize: '0.9rem', color: '#0047BA', fontWeight: 'bold', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' },
 
     modalActions: { display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '10px' },
-    cancelBtn: { padding: '12px 24px', background: 'white', border: '1px solid #ddd', borderRadius: '8px', cursor: 'pointer', color: '#666', fontWeight: '600' },
-    saveBtn: { padding: '12px 24px', background: '#0047BA', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' },
+    cancelBtn: { padding: '12px 24px', background: 'white', border: '1px solid #ddd', borderRadius: '8px', cursor: 'pointer', color: '#666', fontWeight: '600', whiteSpace: 'nowrap' }, // Prevent wrap
+    saveBtn: { padding: '12px 24px', background: '#0047BA', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', whiteSpace: 'nowrap' }, // Prevent wrap
 
     pagination: { display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: '20px', gap: '10px', borderTop: '1px solid #eee', paddingTop: '20px' },
     pageBtn: { padding: '8px 12px', border: '1px solid #ddd', borderRadius: '4px', fontSize: '0.9rem', fontWeight: '500', minWidth: '36px', transition: 'all 0.2s', background: 'white', cursor: 'pointer' }
