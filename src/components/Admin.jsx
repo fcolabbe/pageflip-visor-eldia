@@ -538,10 +538,27 @@ const styles = {
     pageContainer: { maxWidth: '1100px', margin: '90px auto', padding: '20px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' },
     header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' },
     title: { color: '#1a1a1a', margin: 0, fontWeight: '700', fontSize: '1.8rem' },
-    logoutBtn: { padding: '8px 16px', background: '#f5f5f5', color: '#666', border: '1px solid #ddd', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' },
+    logoutBtn: {
+        padding: '8px 16px',
+        background: '#f5f5f5',
+        color: '#666',
+        border: '1px solid #ddd',
+        borderRadius: '6px',
+        cursor: 'pointer',
+        fontWeight: 'bold',
+        whiteSpace: 'nowrap', // FIX
+        flexShrink: 0 // FIX
+    },
 
     dashboardCard: { background: 'white', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', padding: '24px', border: '1px solid #eaeaea' },
-    toolbar: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' },
+    toolbar: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '24px',
+        flexWrap: 'wrap', // Ensure wrapping on small screens
+        gap: '15px' // Add gap for when wrapping occurs
+    },
     subtitle: { margin: 0, fontSize: '1.2rem', color: '#444', fontWeight: '600' },
 
     createBtn: {

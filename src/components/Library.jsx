@@ -210,7 +210,9 @@ const styles = {
         cursor: 'pointer',
         fontSize: '0.9rem',
         fontWeight: 'bold',
-        transition: 'background 0.2s'
+        transition: 'background 0.2s',
+        whiteSpace: 'nowrap', // Prevent text wrapping
+        flexShrink: 0 // Prevent shrinking
     },
     clearBtn: {
         padding: '8px 12px',
@@ -221,7 +223,9 @@ const styles = {
         cursor: 'pointer',
         fontSize: '1rem',
         fontWeight: 'bold',
-        lineHeight: '1'
+        lineHeight: '1',
+        whiteSpace: 'nowrap', // Prevent text wrapping
+        flexShrink: 0 // Prevent shrinking
     },
     grid: {
         display: 'grid',
