@@ -4,6 +4,9 @@ import { useNavigate } from 'react-router-dom';
 
 const Admin = () => {
     const [editions, setEditions] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [page, setPage] = useState(1);
+    const [meta, setMeta] = useState({});
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [uploading, setUploading] = useState(false);
     const [uploadMode, setUploadMode] = useState('file'); // 'file' or 'url'
