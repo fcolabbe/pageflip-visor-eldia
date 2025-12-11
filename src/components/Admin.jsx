@@ -182,6 +182,70 @@ const Admin = () => {
         }
     };
 
+    // Helper for date formatting (Timezone fix)
+    const formatDate = (dateString) => {
+        if (!dateString) return '';
+        const [y, m, d] = dateString.split('T')[0].split('-');
+        return `${d}/${m}/${y}`;
+    };
+
+    // Pagination Logic
+    const renderPagination = () => {
+        const totalPages = meta.totalPages || 1;
+        if (totalPages <= 1) return null;
+
+        const pages = [];
+        let start = Math.max(1, page - 2);
+        let end = Math.min(totalPages, page + 2);
+
+        if (start > 1) pages.push(1);
+        if (start > 2) pages.push('...');
+
+        for (let i = start; i <= end; i++) {
+            pages.push(i);
+        }
+
+        if (end < totalPages - 1) pages.push('...');
+        if (end < totalPages) pages.push(totalPages);
+
+        return (
+            <div style={styles.pagination}>
+                <button
+                    disabled={page === 1}
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    style={{ ...styles.pageBtn, opacity: page === 1 ? 0.5 : 1 }}
+                >
+                    &larr;
+                </button>
+
+                {pages.map((p, idx) => (
+                    <button
+                        key={idx}
+                        onClick={() => typeof p === 'number' && setPage(p)}
+                        style={{
+                            ...styles.pageBtn,
+                            background: p === page ? '#0047BA' : 'white',
+                            color: p === page ? 'white' : '#333',
+                            cursor: typeof p === 'number' ? 'pointer' : 'default',
+                            borderColor: p === page ? '#0047BA' : '#ddd'
+                        }}
+                        disabled={typeof p !== 'number'}
+                    >
+                        {p}
+                    </button>
+                ))}
+
+                <button
+                    disabled={page >= totalPages}
+                    onClick={() => setPage(p => p + 1)}
+                    style={{ ...styles.pageBtn, opacity: page >= totalPages ? 0.5 : 1 }}
+                >
+                    &rarr;
+                </button>
+            </div>
+        );
+    };
+
     return (
         <div style={styles.pageContainer}>
             <div style={styles.header}>
@@ -230,7 +294,7 @@ const Admin = () => {
                                     <td style={styles.td}>
                                         <span style={styles.cellTitle}>{edition.title}</span>
                                     </td>
-                                    <td style={styles.td}>{edition.edition_date && new Date(edition.edition_date).toLocaleDateString()}</td>
+                                    <td style={styles.td}>{formatDate(edition.edition_date)}</td>
                                     <td style={styles.td}>
                                         <span style={styles.badge}>{edition.type}</span>
                                     </td>
@@ -252,23 +316,7 @@ const Admin = () => {
                     </table>
 
                     {/* Admin Pagination */}
-                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px', gap: '15px', borderTop: '1px solid #eee' }}>
-                        <button
-                            disabled={page === 1}
-                            onClick={() => setPage(p => Math.max(1, p - 1))}
-                            style={{ ...styles.cancelBtn, opacity: page === 1 ? 0.5 : 1 }}
-                        >
-                            &larr; Anterior
-                        </button>
-                        <span style={{ fontWeight: 'bold', color: '#555' }}>Página {page} de {meta.totalPages || 1}</span>
-                        <button
-                            disabled={page >= (meta.totalPages || 1)}
-                            onClick={() => setPage(p => p + 1)}
-                            style={{ ...styles.cancelBtn, opacity: page >= (meta.totalPages || 1) ? 0.5 : 1 }}
-                        >
-                            Siguiente &rarr;
-                        </button>
-                    </div>
+                    {renderPagination()}
                 </div>
             </div>
 
@@ -494,7 +542,10 @@ const styles = {
 
     modalActions: { display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '10px' },
     cancelBtn: { padding: '12px 24px', background: 'white', border: '1px solid #ddd', borderRadius: '8px', cursor: 'pointer', color: '#666', fontWeight: '600' },
-    saveBtn: { padding: '12px 24px', background: '#0047BA', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }
+    saveBtn: { padding: '12px 24px', background: '#0047BA', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' },
+
+    pagination: { display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: '20px', gap: '10px', borderTop: '1px solid #eee', paddingTop: '20px' },
+    pageBtn: { padding: '8px 12px', border: '1px solid #ddd', borderRadius: '4px', fontSize: '0.9rem', fontWeight: '500', minWidth: '36px', transition: 'all 0.2s', background: 'white', cursor: 'pointer' }
 };
 
 export default Admin;

@@ -7,6 +7,7 @@ const Library = () => {
     const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(1);
     const [meta, setMeta] = useState({});
+    const [dateFilter, setDateFilter] = useState('');
 
     useEffect(() => {
         const fetchEditions = async () => {
@@ -14,9 +15,10 @@ const Library = () => {
             try {
                 // Use VITE_API_URL or fallback
                 const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
-                const res = await axios.get(`${apiUrl}/editions`, {
-                    params: { page, limit: 15 }
-                });
+                const params = { page, limit: 15 };
+                if (dateFilter) params.date = dateFilter;
+
+                const res = await axios.get(`${apiUrl}/editions`, { params });
 
                 // New response structure: { data: [], meta: {} }
                 if (res.data.data) {
@@ -35,13 +37,100 @@ const Library = () => {
         };
 
         fetchEditions();
-    }, [page]);
+    }, [page, dateFilter]);
+
+    const handleDateChange = (e) => {
+        setDateFilter(e.target.value);
+        setPage(1); // Reset to page 1 on filter change
+    };
+
+    // Helper to format date correcting timezone offset
+    // Should display the date as stored in DB (YYYY-MM-DD)
+    const formatDate = (dateString) => {
+        if (!dateString) return '';
+        // Append T12:00:00 to ensure it falls in the middle of the day for local time conversion
+        // Or simply split string parts to avoid timezone conversion entirely
+        const [y, m, d] = dateString.split('T')[0].split('-');
+        return `${d}/${m}/${y}`;
+    };
+
+    // Pagination Logic
+    const renderPagination = () => {
+        const totalPages = meta.totalPages || 1;
+        if (totalPages <= 1) return null;
+
+        const pages = [];
+        // Simple logic: Show all if small, or range around current
+        // For simplicity, let's show max 5 pages around current
+        let start = Math.max(1, page - 2);
+        let end = Math.min(totalPages, page + 2);
+
+        if (start > 1) pages.push(1);
+        if (start > 2) pages.push('...');
+
+        for (let i = start; i <= end; i++) {
+            pages.push(i);
+        }
+
+        if (end < totalPages - 1) pages.push('...');
+        if (end < totalPages) pages.push(totalPages);
+
+        return (
+            <div style={styles.pagination}>
+                <button
+                    disabled={page === 1}
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    style={{ ...styles.pageBtn, opacity: page === 1 ? 0.5 : 1 }}
+                >
+                    &larr;
+                </button>
+
+                {pages.map((p, idx) => (
+                    <button
+                        key={idx}
+                        onClick={() => typeof p === 'number' && setPage(p)}
+                        style={{
+                            ...styles.pageBtn,
+                            background: p === page ? '#0047BA' : '#f0f0f0',
+                            color: p === page ? 'white' : '#333',
+                            cursor: typeof p === 'number' ? 'pointer' : 'default'
+                        }}
+                        disabled={typeof p !== 'number'}
+                    >
+                        {p}
+                    </button>
+                ))}
+
+                <button
+                    disabled={page >= totalPages}
+                    onClick={() => setPage(p => p + 1)}
+                    style={{ ...styles.pageBtn, opacity: page >= totalPages ? 0.5 : 1 }}
+                >
+                    &rarr;
+                </button>
+            </div>
+        );
+    };
 
     if (loading) return <div style={{ padding: '100px', textAlign: 'center' }}>Cargando Biblioteca...</div>;
 
     return (
         <div style={styles.gridContainer}>
-            <h2 style={styles.title}>Últimas Ediciones</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '2px solid #0047BA', paddingBottom: '10px' }}>
+                <h2 style={{ margin: 0, color: '#333' }}>Últimas Ediciones</h2>
+
+                {/* Search Filter */}
+                <div>
+                    <input
+                        type="date"
+                        value={dateFilter}
+                        onChange={handleDateChange}
+                        style={styles.searchInput}
+                        placeholder="Buscar por fecha"
+                    />
+                </div>
+            </div>
+
             <div style={styles.grid}>
                 {editions.map(edition => (
                     <Link to={`/visor/${edition.id}`} key={edition.id} style={styles.card}>
@@ -55,33 +144,18 @@ const Library = () => {
                         </div>
                         <div style={styles.info}>
                             <h3 style={styles.editionTitle}>{edition.title}</h3>
-                            <p style={styles.date}>{new Date(edition.edition_date).toLocaleDateString()}</p>
+                            <p style={styles.date}>{formatDate(edition.edition_date)}</p>
                         </div>
                     </Link>
                 ))}
                 {editions.length === 0 && (
-                    <p style={{ textAlign: 'center', width: '100%', color: '#666' }}>No hay ediciones disponibles.</p>
+                    <p style={{ textAlign: 'center', width: '100%', color: '#666', gridColumn: '1 / -1' }}>
+                        No se encontraron ediciones.
+                    </p>
                 )}
             </div>
 
-            {/* Pagination Controls */}
-            <div style={styles.pagination}>
-                <button
-                    disabled={page === 1}
-                    onClick={() => setPage(p => Math.max(1, p - 1))}
-                    style={{ ...styles.pageBtn, opacity: page === 1 ? 0.5 : 1 }}
-                >
-                    &larr; Anterior
-                </button>
-                <span style={styles.pageInfo}>Página {page} de {meta.totalPages || 1}</span>
-                <button
-                    disabled={page >= (meta.totalPages || 1)}
-                    onClick={() => setPage(p => p + 1)}
-                    style={{ ...styles.pageBtn, opacity: page >= (meta.totalPages || 1) ? 0.5 : 1 }}
-                >
-                    Siguiente &rarr;
-                </button>
-            </div>
+            {renderPagination()}
         </div>
     );
 };
@@ -93,12 +167,14 @@ const styles = {
         padding: '20px',
         minHeight: '80vh' // Ensure it takes space
     },
-    title: {
-        marginBottom: '20px',
-        color: '#333',
-        borderBottom: '2px solid #0047BA',
-        display: 'inline-block',
-        paddingBottom: '5px'
+    // title: removed in favor of flex header
+    searchInput: {
+        padding: '8px 12px',
+        borderRadius: '6px',
+        border: '1px solid #ddd',
+        fontSize: '0.9rem',
+        outline: 'none',
+        color: '#555'
     },
     grid: {
         display: 'grid',
@@ -146,17 +222,16 @@ const styles = {
         justifyContent: 'center',
         alignItems: 'center',
         marginTop: '40px',
-        gap: '20px'
+        gap: '10px'
     },
     pageBtn: {
-        padding: '10px 20px',
-        background: '#0047BA',
-        color: 'white',
-        border: 'none',
-        borderRadius: '6px',
-        cursor: 'pointer',
+        padding: '8px 12px',
+        border: '1px solid #ddd',
+        borderRadius: '4px',
         fontSize: '0.9rem',
-        fontWeight: 'bold'
+        fontWeight: '500',
+        minWidth: '36px',
+        transition: 'all 0.2s'
     },
     pageInfo: {
         fontSize: '1rem',
