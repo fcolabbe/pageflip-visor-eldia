@@ -15,7 +15,7 @@ const Library = () => {
                 // Use VITE_API_URL or fallback
                 const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
                 const res = await axios.get(`${apiUrl}/editions`, {
-                    params: { page, limit: 12 }
+                    params: { page, limit: 15 }
                 });
 
                 // New response structure: { data: [], meta: {} }
