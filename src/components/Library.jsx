@@ -144,7 +144,7 @@ const Library = () => {
                         </div>
                         <div style={styles.info}>
                             <h3 style={styles.editionTitle}>{edition.title}</h3>
-                            <p style={styles.date}>{formatDate(edition.edition_date)}</p>
+                            {/* Date removed as requested */}
                         </div>
                     </Link>
                 ))}
