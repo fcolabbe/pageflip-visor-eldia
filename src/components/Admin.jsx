@@ -241,12 +241,18 @@ const Admin = () => {
                                     </td>
                                 </tr>
                             ))}
+                            {editions.length === 0 && (
+                                <tr>
+                                    <td colSpan="5" style={{ padding: '40px', textAlign: 'center', color: '#888' }}>
+                                        No hay ediciones registradas.
+                                    </td>
+                                </tr>
                             )}
                         </tbody>
                     </table>
 
                     {/* Admin Pagination */}
-                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px', gap: '15px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px', gap: '15px', borderTop: '1px solid #eee' }}>
                         <button
                             disabled={page === 1}
                             onClick={() => setPage(p => Math.max(1, p - 1))}
@@ -254,7 +260,7 @@ const Admin = () => {
                         >
                             &larr; Anterior
                         </button>
-                        <span style={{ fontWeight: 'bold' }}>Página {page} de {meta.totalPages || 1}</span>
+                        <span style={{ fontWeight: 'bold', color: '#555' }}>Página {page} de {meta.totalPages || 1}</span>
                         <button
                             disabled={page >= (meta.totalPages || 1)}
                             onClick={() => setPage(p => p + 1)}
