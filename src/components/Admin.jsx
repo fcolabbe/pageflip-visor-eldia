@@ -96,19 +96,29 @@ const Admin = () => {
         }
     }, [navigate]);
 
-    useEffect(() => {
-        fetchEditions();
-    }, []);
-
     const fetchEditions = async () => {
         try {
             const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
-            const res = await axios.get(`${apiUrl}/editions`);
-            setEditions(res.data);
+            const res = await axios.get(`${apiUrl}/editions`, {
+                params: { page, limit: 15 } // 15 items per page for admin
+            });
+
+            if (res.data.data) {
+                setEditions(res.data.data);
+                setMeta(res.data.meta);
+            } else {
+                setEditions(res.data);
+            }
         } catch (err) {
-            console.error("Error fetching editions", err);
+            console.error(err);
+        } finally {
+            setLoading(false);
         }
     };
+
+    useEffect(() => {
+        fetchEditions();
+    }, [page]);
 
     const handleLogout = () => {
         localStorage.removeItem('token');
@@ -192,8 +202,7 @@ const Admin = () => {
                 <div style={styles.tableWrapper}>
                     <table style={styles.table}>
                         <thead>
-                            <tr>
-                                <th style={styles.th}>ID</th>
+                            <tr style={{ background: '#f9fafb' }}>
                                 <th style={styles.th}>Portada</th>
                                 <th style={styles.th}>Título</th>
                                 <th style={styles.th}>Fecha</th>
@@ -204,7 +213,6 @@ const Admin = () => {
                         <tbody>
                             {editions.map(edition => (
                                 <tr key={edition.id} style={styles.tr}>
-                                    <td style={styles.td}>#{edition.id}</td>
                                     <td style={styles.td}>
                                         <div style={styles.thumbWrapper}>
                                             <img
@@ -219,7 +227,7 @@ const Admin = () => {
                                     <td style={styles.td}>
                                         <span style={styles.cellTitle}>{edition.title}</span>
                                     </td>
-                                    <td style={styles.td}>{new Date(edition.edition_date).toLocaleDateString()}</td>
+                                    <td style={styles.td}>{edition.edition_date && new Date(edition.edition_date).toLocaleDateString()}</td>
                                     <td style={styles.td}>
                                         <span style={styles.badge}>{edition.type}</span>
                                     </td>
@@ -232,7 +240,7 @@ const Admin = () => {
                             ))}
                             {editions.length === 0 && (
                                 <tr>
-                                    <td colSpan="6" style={{ padding: '40px', textAlign: 'center', color: '#888' }}>
+                                    <td colSpan="5" style={{ padding: '40px', textAlign: 'center', color: '#888' }}>
                                         No hay ediciones registradas.
                                     </td>
                                 </tr>

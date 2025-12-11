@@ -5,14 +5,28 @@ import axios from 'axios';
 const Library = () => {
     const [editions, setEditions] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [page, setPage] = useState(1);
+    const [meta, setMeta] = useState({});
 
     useEffect(() => {
         const fetchEditions = async () => {
+            setLoading(true);
             try {
                 // Use VITE_API_URL or fallback
                 const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
-                const res = await axios.get(`${apiUrl}/editions`);
-                setEditions(res.data);
+                const res = await axios.get(`${apiUrl}/editions`, {
+                    params: { page, limit: 12 }
+                });
+
+                // New response structure: { data: [], meta: {} }
+                if (res.data.data) {
+                    setEditions(res.data.data);
+                    setMeta(res.data.meta);
+                } else {
+                    setEditions(res.data); // Fallback if API hasn't updated yet?
+                }
+
+                window.scrollTo(0, 0);
             } catch (err) {
                 console.error("Failed to fetch editions", err);
             } finally {
@@ -21,7 +35,7 @@ const Library = () => {
         };
 
         fetchEditions();
-    }, []);
+    }, [page]);
 
     if (loading) return <div style={{ padding: '100px', textAlign: 'center' }}>Cargando Biblioteca...</div>;
 
@@ -46,8 +60,27 @@ const Library = () => {
                     </Link>
                 ))}
                 {editions.length === 0 && (
-                    <p>No hay ediciones disponibles.</p>
+                    <p style={{ textAlign: 'center', width: '100%', color: '#666' }}>No hay ediciones disponibles.</p>
                 )}
+            </div>
+
+            {/* Pagination Controls */}
+            <div style={styles.pagination}>
+                <button
+                    disabled={page === 1}
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    style={{ ...styles.pageBtn, opacity: page === 1 ? 0.5 : 1 }}
+                >
+                    &larr; Anterior
+                </button>
+                <span style={styles.pageInfo}>Página {page} de {meta.totalPages || 1}</span>
+                <button
+                    disabled={page >= (meta.totalPages || 1)}
+                    onClick={() => setPage(p => p + 1)}
+                    style={{ ...styles.pageBtn, opacity: page >= (meta.totalPages || 1) ? 0.5 : 1 }}
+                >
+                    Siguiente &rarr;
+                </button>
             </div>
         </div>
     );
@@ -56,8 +89,9 @@ const Library = () => {
 const styles = {
     gridContainer: {
         maxWidth: '1200px',
-        margin: '80px auto 20px', // Top margin for navbar
-        padding: '20px'
+        margin: '90px auto 40px', // Adjusted top margin
+        padding: '20px',
+        minHeight: '80vh' // Ensure it takes space
     },
     title: {
         marginBottom: '20px',
@@ -82,7 +116,7 @@ const styles = {
     },
     coverWrapper: {
         width: '100%',
-        aspectRatio: '0.7',
+        aspectRatio: '0.707', // ISO A4 Ratio approx
         boxShadow: '0 4px 10px rgba(0,0,0,0.15)',
         borderRadius: '4px',
         overflow: 'hidden',
@@ -100,11 +134,34 @@ const styles = {
     editionTitle: {
         fontSize: '1rem',
         margin: '5px 0',
-        color: '#0047BA'
+        color: '#0047BA',
+        fontWeight: '600'
     },
     date: {
         fontSize: '0.8rem',
         color: '#666'
+    },
+    pagination: {
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: '40px',
+        gap: '20px'
+    },
+    pageBtn: {
+        padding: '10px 20px',
+        background: '#0047BA',
+        color: 'white',
+        border: 'none',
+        borderRadius: '6px',
+        cursor: 'pointer',
+        fontSize: '0.9rem',
+        fontWeight: 'bold'
+    },
+    pageInfo: {
+        fontSize: '1rem',
+        color: '#333',
+        fontWeight: '500'
     }
 };
 
