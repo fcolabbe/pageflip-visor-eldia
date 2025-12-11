@@ -7,7 +7,8 @@ const Library = () => {
     const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(1);
     const [meta, setMeta] = useState({});
-    const [dateFilter, setDateFilter] = useState('');
+    const [dateFilter, setDateFilter] = useState(''); // Input value
+    const [searchQuery, setSearchQuery] = useState(''); // Active filter
 
     useEffect(() => {
         const fetchEditions = async () => {
@@ -16,7 +17,7 @@ const Library = () => {
                 // Use VITE_API_URL or fallback
                 const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
                 const params = { page, limit: 15 };
-                if (dateFilter) params.date = dateFilter;
+                if (searchQuery) params.date = searchQuery;
 
                 const res = await axios.get(`${apiUrl}/editions`, { params });
 
@@ -37,11 +38,17 @@ const Library = () => {
         };
 
         fetchEditions();
-    }, [page, dateFilter]);
+    }, [page, searchQuery]); // Depend on searchQuery, not dateFilter
 
-    const handleDateChange = (e) => {
-        setDateFilter(e.target.value);
-        setPage(1); // Reset to page 1 on filter change
+    const handleSearch = () => {
+        setSearchQuery(dateFilter);
+        setPage(1);
+    };
+
+    const handleClear = () => {
+        setDateFilter('');
+        setSearchQuery('');
+        setPage(1);
     };
 
     // Helper to format date correcting timezone offset
@@ -119,15 +126,28 @@ const Library = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '2px solid #0047BA', paddingBottom: '10px' }}>
                 <h2 style={{ margin: 0, color: '#333' }}>Últimas Ediciones</h2>
 
-                {/* Search Filter */}
-                <div>
+                <div style={styles.searchContainer}>
                     <input
                         type="date"
                         value={dateFilter}
-                        onChange={handleDateChange}
+                        onChange={(e) => setDateFilter(e.target.value)}
                         style={styles.searchInput}
                         placeholder="Buscar por fecha"
                     />
+                    <button
+                        onClick={handleSearch}
+                        style={styles.searchBtn}
+                    >
+                        Buscar
+                    </button>
+                    {dateFilter && (
+                        <button
+                            onClick={handleClear}
+                            style={styles.clearBtn}
+                        >
+                            ×
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -168,6 +188,11 @@ const styles = {
         minHeight: '80vh' // Ensure it takes space
     },
     // title: removed in favor of flex header
+    searchContainer: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px'
+    },
     searchInput: {
         padding: '8px 12px',
         borderRadius: '6px',
@@ -175,6 +200,28 @@ const styles = {
         fontSize: '0.9rem',
         outline: 'none',
         color: '#555'
+    },
+    searchBtn: {
+        padding: '8px 16px',
+        background: '#0047BA',
+        color: 'white',
+        border: 'none',
+        borderRadius: '6px',
+        cursor: 'pointer',
+        fontSize: '0.9rem',
+        fontWeight: 'bold',
+        transition: 'background 0.2s'
+    },
+    clearBtn: {
+        padding: '8px 12px',
+        background: '#f0f0f0',
+        color: '#666',
+        border: '1px solid #ddd',
+        borderRadius: '6px',
+        cursor: 'pointer',
+        fontSize: '1rem',
+        fontWeight: 'bold',
+        lineHeight: '1'
     },
     grid: {
         display: 'grid',
